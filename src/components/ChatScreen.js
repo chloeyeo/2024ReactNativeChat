@@ -2,9 +2,11 @@ import React, {useEffect, useState} from 'react';
 import {View, Text, TextInput, Button, StyleSheet} from 'react-native';
 import useSocket from '../clientService/SocketService';
 
-const ChatScreen = () => {
+const ChatScreen = ({roomId}) => {
   const [message, setMessage] = useState('');
   const [messages, setMessages] = useState([]);
+  const [sentMessages, setSentMessages] = useState([]); // Correct initialization
+
   const socket = useSocket();
 
   useEffect(() => {
@@ -26,29 +28,47 @@ const ChatScreen = () => {
       // Emit message to server
       socket.emit('send_message', {
         message: message,
-        room: 'a', // Replace with room ID
+        room: roomId,
       });
       setMessage(''); // Clear input after sending message
+      // Update sentMessages immutably
+      setSentMessages(prevSentMessages => [...prevSentMessages, message]);
     }
   };
 
   return (
     <View style={{flex: 1}}>
-      <View style={styles.messageContainer}>
-        {messages.map((msg, index) => (
-          <Text key={index} style={styles.messageText}>
-            {msg}
-          </Text>
-        ))}
+      <View style={{flex: 1}}>
+        <View>
+          {sentMessages.map(
+            (
+              message,
+              idx, // Ensure sentMessages is defined and an array
+            ) => (
+              <Text key={`sent message-${idx}`} style={styles.messageText}>
+                {message}
+              </Text>
+            ),
+          )}
+        </View>
       </View>
-      <View style={styles.inputContainer}>
-        <TextInput
-          style={styles.input}
-          value={message}
-          onChangeText={setMessage}
-          placeholder="Type your message..."
-        />
-        <Button title="Send" onPress={sendMessage} />
+      <View style={{flex: 1}}>
+        <View style={styles.messageContainer}>
+          {messages.map((msg, index) => (
+            <Text key={index} style={styles.messageText}>
+              {msg}
+            </Text>
+          ))}
+        </View>
+        <View style={styles.inputContainer}>
+          <TextInput
+            style={styles.input}
+            value={message}
+            onChangeText={setMessage}
+            placeholder="Type your message..."
+          />
+          <Button title="Send" onPress={sendMessage} />
+        </View>
       </View>
     </View>
   );
